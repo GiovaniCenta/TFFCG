@@ -24,7 +24,7 @@
 	<inttypes.h>
 	<stdint.h>
 
-1603996817 source:c:\users\cliente\desktop\lab5 codigo fonte\src\main.cpp
+1604704869 source:c:\users\cliente\desktop\lab5 codigo fonte\src\main.cpp
 	"loadFunctions.cpp"
 	"tiny_obj_loader.h"
 
@@ -863,7 +863,7 @@
 1603713706 c:\users\cliente\desktop\lab5 codigo fonte\include\glm\gtc\type_ptr.inl
 	<cstring>
 
-1603713706 c:\users\cliente\desktop\lab5 codigo fonte\include\tiny_obj_loader.h
+1604688940 c:\users\cliente\desktop\lab5 codigo fonte\include\tiny_obj_loader.h
 	<map>
 	<string>
 	<vector>
@@ -922,7 +922,7 @@
 1603713706 source:c:\users\cliente\desktop\lab5 codigo fonte\src\tiny_obj_loader.cpp
 	"tiny_obj_loader.h"
 
-1603992121 c:\users\cliente\desktop\lab5 codigo fonte\src\inicialize.cpp
+1604697080 c:\users\cliente\desktop\lab5 codigo fonte\src\inicialize.cpp
 	<cmath>
 	<cstdio>
 	<cstdlib>
@@ -989,4 +989,6 @@
 	"utils.h"
 	"matrices.h"
 	"inicialize.cpp"
+
+1604687098 source:c:\users\cliente\desktop\lab5 codigo fonte\common\objloader.cpp
 

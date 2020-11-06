@@ -11,7 +11,7 @@
 				<Option working_dir="bin/Debug/" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="funciona_merda" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-std=c++11" />
@@ -21,6 +21,13 @@
 					<Add option="-static-libstdc++" />
 					<Add option="-static-libgcc" />
 					<Add option="-static" />
+					<Add option="-Wl,-allow-multiple-definition" />
+					<Add library="lib/libglfw3.a" />
+					<Add library="lib/libglfw3dll.a" />
+					<Add library="lib-mingw-32/libglfw3.a" />
+					<Add library="lib-mingw-32/libglfw3dll.a" />
+					<Add library="../../../../MinGW/lib/libglu32.a" />
+					<Add library="../../../../MinGW/lib/libgdi32.a" />
 				</Linker>
 			</Target>
 			<Target title="Release">
@@ -98,6 +105,7 @@
 			<Add option="lib\libglfw3.a -lgdi32 -lopengl32" />
 			<Add directory="lib" />
 		</Linker>
+		<Unit filename="common/objloader.cpp" />
 		<Unit filename="include/GLFW/glfw3.h" />
 		<Unit filename="include/GLFW/glfw3native.h" />
 		<Unit filename="include/KHR/khrplatform.h" />
@@ -372,16 +380,20 @@
 		<Unit filename="src/glad.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/inicialize.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/loadFunctions.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/shader_fragment.glsl" />
 		<Unit filename="src/shader_vertex.glsl" />
 		<Unit filename="src/stb_image.cpp" />
 		<Unit filename="src/textrendering.cpp" />
 		<Unit filename="src/tiny_obj_loader.cpp" />
+		<Unit filename="src/tiny_obj_loader.h" />
 		<Extensions>
-			<code_completion />
-			<envvars />
-			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>
 	</Project>

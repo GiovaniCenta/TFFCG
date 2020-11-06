@@ -1,12 +1,23 @@
 //#include "inicialize.cpp"
 #include "loadFunctions.cpp"
 
+#define M_PI   3.14159265358979323846
+#define M_PI_2 1.57079632679489661923
+
+//LIMITES DO MAPA
+
+
+        #define LIMITEHORIZONTAL 5.0
+        #define LIMITEVERTICAL 3.0
+        #define LIMITEFRENTEATRAS 5.0
+        #define SKYBOXTAM 5.0
 
 
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "tiny_obj_loader.h"
 void carregaObjetos(int argc, char* argv[]);
 void desenhaObjetos();
+void teste();
 
 
 int main(int argc, char* argv[])
@@ -71,7 +82,7 @@ int main(int argc, char* argv[])
         // Aqui executamos as operações de renderização
 
 
-        glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -88,8 +99,10 @@ int main(int argc, char* argv[])
         glm::vec4 camera_view_vector = glm::vec4(-x, -y, -z, 0.0);
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0,0.0f,0.0f); // Vetor "up"
 
-        //minha freecamera
-        camera_position_c = freeCamera(window,camera_position_c,camera_view_vector,camera_up_vector);
+        //minha fpsCamera
+
+        camera_position_c = fpsCamera(window,camera_position_c,camera_view_vector,camera_up_vector);
+
 
 
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
@@ -127,6 +140,17 @@ int main(int argc, char* argv[])
 
 
 
+
+
+
+        //teste();
+
+
+
+
+
+
+
         desenhaObjetos();
 
         //TextRendering_ShowEulerAngles(window);
@@ -150,28 +174,43 @@ int main(int argc, char* argv[])
 
 
 
+int y = 0;
 
 
-
-glm::vec4 freeCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 camera_view_vector,glm::vec4 camera_up_vector)
+glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 camera_view_vector,glm::vec4 camera_up_vector)
 {
     glm::vec4 w = -camera_view_vector;
     glm::vec4 u =  crossproduct(camera_up_vector,w) /* PREENCHA AQUI o cálculo do vetor u */;
     // Normalizamos os vetores u e w
     w = w / norm(w);
     u = u / norm(u);
+
     glm::vec4 v = crossproduct(w,u);
 
-    float speed = 0.009f;
+    float speed = 0.02f;
     int stateW = glfwGetKey(window, GLFW_KEY_W);
     int stateD = glfwGetKey(window, GLFW_KEY_D);
     int stateS = glfwGetKey(window, GLFW_KEY_S);
     int stateA = glfwGetKey(window, GLFW_KEY_A);
+    int stateSHIFT = glfwGetKey(window,GLFW_KEY_LEFT_SHIFT);
+    int stateSPACE = glfwGetKey(window,GLFW_KEY_SPACE);
+    int stateCTRL = glfwGetKey(window,GLFW_KEY_LEFT_CONTROL);
 
 
 
-    if (stateW == GLFW_PRESS)
+    //Mecanica de corrida, segurou shift anda 2 vezes mais rapido
+    if (stateSHIFT == GLFW_PRESS)
     {
+        speed = speed * 2;
+    }
+
+
+
+
+
+    if (stateW == GLFW_PRESS && camera_position_c.x < LIMITEFRENTEATRAS && camera_position_c.z < LIMITEFRENTEATRAS && camera_position_c.z > -LIMITEFRENTEATRAS && camera_position_c.x > -LIMITEFRENTEATRAS)
+    {
+        printf("\n%f", camera_position_c.x);
         camera_position_c = camera_position_c + (-w * speed);
 
     }
@@ -189,13 +228,36 @@ glm::vec4 freeCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 ca
     }
 
 
+int i = 0;
+
+//Mecanica de pulo, sobre umas posicoes em y
+//tem que arrumar pq se segura fica no ar
+    if (stateSPACE == GLFW_PRESS)
+    {
+
+
+            camera_position_c.y = 0.1;
 
 
 
+    }
+
+//mecanica de agachamento, mesmo problema
+     else if (stateCTRL == GLFW_PRESS)
+    {
+
+
+            camera_position_c.y = -0.1;
+
+        }
+
+
+    else{
+        camera_position_c.y = 0.0;
+    }
 
     return camera_position_c;
 }
-
 
 
 
@@ -205,19 +267,28 @@ glm::vec4 freeCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 ca
     // Carregamos duas imagens para serem utilizadas como textura
     LoadTextureImage("../../data/grama.jpg");      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif"); // TextureImage1
+    LoadTextureImage("../../data/NIGHTSKY.jpg");
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
-    //ObjModel bunnymodel("../../data/bunny.obj");
-    //ComputeNormals(&bunnymodel);
-    //BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+    ObjModel manmodel("../../data/a.obj");
+    ComputeNormals(&manmodel);
+    BuildTrianglesAndAddToVirtualScene(&manmodel);
+
+    ObjModel bunnymodel("../../data/bunny.obj");
+    ComputeNormals(&bunnymodel);
+    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
 
     ObjModel planemodel("../../data/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
+
+    ObjModel spheremodel2("../../data/cow.obj");
+    ComputeNormals(&spheremodel2);
+    BuildTrianglesAndAddToVirtualScene(&spheremodel2);
 
     //ObjModel handgunmodel("../../data/sphere.obj");
     //ComputeNormals(&handgunmodel);
@@ -236,8 +307,11 @@ void desenhaObjetos(){
 
         #define SPHERE 0
         #define BUNNY  1
-        #define PLANE  2
-        #define HANDGUN 3
+        #define CHAO  2
+        #define HOMEM 3
+        #define SPHERE2 4
+        #define SKY_BOX 5
+        #define CEU 6
 
         glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
         // Desenhamos o modelo da esfera
@@ -250,25 +324,93 @@ void desenhaObjetos(){
         DrawVirtualObject("sphere");
 
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(1.0f,0.0f,0.0f)
-              * Matrix_Rotate_X(g_AngleX + (float)glfwGetTime() * 0.1f);
+        model = Matrix_Translate(1.0f,0.0f,1.0f)
+        * Matrix_Scale(-0.5f, -0.5f, -0.5f)
+        * Matrix_Rotate_X(3.14) ;
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(object_id_uniform, BUNNY);
         DrawVirtualObject("bunny");
 
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-0.5f,0.5f);
-        model = model * Matrix_Scale(10.0f, 0.0f, 10.0f);
+
+
+        // VACA
+        model = Matrix_Translate(2.0f,0.0f,4.0f);
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, PLANE);
+        glUniform1i(object_id_uniform, HOMEM);
+        DrawVirtualObject("cow");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //LIMITES DO MAPA
+
+
+        // Desenhamos o plano do chão
+        model = Matrix_Translate(0.0f,-0.5f,0.0f);
+        model = model * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, CHAO);
         DrawVirtualObject("plane");
 
-        // ARMA
-        model = Matrix_Translate(2.0f,2.0f,0.0f);
+
+
+        //SKY BOX LATERAL ESQUERDA
+        model = Matrix_Translate(-LIMITEHORIZONTAL,0.0f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM, SKYBOXTAM)
+        *Matrix_Rotate_Z(M_PI_2) ;
         glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(object_id_uniform, HANDGUN);
-        DrawVirtualObject("handgun");
+        glUniform1i(object_id_uniform, SKY_BOX);
+        DrawVirtualObject("plane");
+
+
+        //SKY BOX LATERAL DIREITA
+        model = Matrix_Translate(LIMITEHORIZONTAL,0.0f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM, SKYBOXTAM)
+        *Matrix_Rotate_Z(M_PI_2);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SKY_BOX);
+        DrawVirtualObject("plane");
+
+        //SKY BOX SUPERIOR
+        model = Matrix_Translate(0.0f,LIMITEVERTICAL,0.0f) * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, CEU);
+        DrawVirtualObject("plane");
+
+        //SKY BOX FRONTAL
+        model = Matrix_Translate(0.0f,0.0f,LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM,0.0f )
+        *Matrix_Rotate_X(M_PI_2);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SKY_BOX);
+        DrawVirtualObject("plane");
+
+        //SKY BOX FRONTAL
+        model = Matrix_Translate(0.0f,0.0f,-LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM,0.0f )
+        *Matrix_Rotate_X(M_PI_2);
+        glUniformMatrix4fv(model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(object_id_uniform, SKY_BOX);
+        DrawVirtualObject("plane");
+
+
         }
+
+
 
 
 

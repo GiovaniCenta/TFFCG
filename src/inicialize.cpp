@@ -165,8 +165,8 @@ bool g_UsePerspectiveProjection = true;
 
 //minhas funcoes pra camera
 double g_LastCursorPosX, g_LastCursorPosY;
-glm::vec4 freeCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 camera_view_vector,glm::vec4 camera_up_vector);
-//glm::vec4 freeCameraMouse(GLFWwindow* window, glm::vec4 camera_view_vector);
+glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 camera_view_vector,glm::vec4 camera_up_vector);
+//glm::vec4 fpsCameraMouse(GLFWwindow* window, glm::vec4 camera_view_vector);
 
 
 // Variável que controla se o texto informativo será mostrado na tela.
