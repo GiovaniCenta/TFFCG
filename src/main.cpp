@@ -14,9 +14,14 @@
 
 
 //VELOCIDADE DAS ESFERAS
-#define VESFERASPADRAO 0.03
-#define VESFERASHARD 0.07
+#define VESFERASPADRAO 0.05
+#define VESFERASHARD 0.2
 #define VESFERASEASY 0.01
+
+//ESSAS VELOCIDADES SERÃO DEFINIDAS POR ESTES BOOLEANOS
+bool pressRightCtrl = false;
+bool pressRightShift = false;
+bool pressRightAlt = true;
 
 
 //Definição das escalas(tamanho multiplicado por) dos coelhos e das esferas
@@ -34,6 +39,10 @@
 #define ALTURA_PADRAO_CAMERA_3P 0.0
 #define ALTURA_PADRAO_CAMERA_ISO 1
 #define POSICAO_INICIAL_CAMERA_Z 4
+
+//DEFINICAO DA CAMERA
+bool pressX = false;
+bool pressC = false;
 
 
 int direcaoe1 = 1;
@@ -78,6 +87,14 @@ int flag = 1;
 
 #define TINYOBJLOADER_IMPLEMENTATION // define this in only *one* .cc
 #include "tiny_obj_loader.h"
+
+
+
+//void TextRendering_TextInfo(GLFWwindow* window, bool venceu);
+void TextRendering_ShowText(GLFWwindow* window, bool vitoria);
+
+
+
 bool Colisao(float cx,  float cz, float sx, float sz);
 void carregaObjetos(int argc, char* argv[]);
 void desenhaObjetos();
@@ -86,6 +103,8 @@ bool colisao(SceneObject a, SceneObject b, glm::mat4 modelA, glm::mat4 modelB);
 
 int movimenta_esfera(int direcaoe4,float vel,float &posicaoXesfera,float posicao_esfera_Z,glm::mat4 model_esfera);
 int movimenta_coelhos(int direc,float vel,float& posicaoYcoelho,float posicao_coelho_X,float posicao_coelho_Z,glm::mat4 modelesf);
+
+float dificuldade(GLFWwindow* window,bool& pressRightCtrl, bool& pressRightShift, bool& pressRightAlt);
 
 ;
 
@@ -96,7 +115,8 @@ glm::vec4 colisao_coelho(glm::vec4 camera_position_c);
 
 
 
-void randomiza_posicao_coelho(float& posicao_coelho_X ){
+void randomiza_posicao_coelho(float& posicao_coelho_X )
+{
     posicao_coelho_X = rand() % 4;
 
 }
@@ -107,12 +127,17 @@ bool look_camera = true;
 
 
 
+
+
 //Posicao inicial da fps camera
 glm::vec4 posicao_inicial_camera = glm::vec4(0.0,ALTURA_PADRAO_CAMERA_3P,POSICAO_INICIAL_CAMERA_Z,1.0f);
 
 
 int main(int argc, char* argv[])
 {
+
+
+
 
 //int random_z_coelho = rand() % -6 + 4;
 
@@ -205,6 +230,9 @@ int main(int argc, char* argv[])
     ComputeNormals(&bunny);
     BuildTrianglesAndAddToVirtualScene(&bunny);
 
+
+
+
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -227,8 +255,16 @@ int main(int argc, char* argv[])
     // Ficamos em loop, renderizando, até que o usuário feche a janela
 
     direcao=1;
+
+
+
+
+
     while (!glfwWindowShouldClose(window))
     {
+
+
+
 
 
         // Aqui executamos as operações de renderização
@@ -238,7 +274,7 @@ int main(int argc, char* argv[])
         float timenow = glfwGetTime();
         float deltatime = timenow - timeprev;
         timeprev = glfwGetTime();
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -322,21 +358,24 @@ int main(int argc, char* argv[])
             // Desenhamos o modelo da esfera
 
             float velocidadedeMovimento = VESFERASPADRAO;
+            velocidadedeMovimento = dificuldade(window,pressRightCtrl,pressRightShift,pressRightAlt);
 
+
+    //TextRendering_TextInfo(window, true);
 //bool Colisao(float cx,  float cz, float sx, float sz)
             direcaoe1 = movimenta_esfera(direcaoe1,velocidadedeMovimento,posicao_esfera_x, -2,model_esfera);
 
             //printf("posicao_esfera1_X: %.2f\n posicao_camera_x: %.2f",posicao_esfera_x, camera_position_c.x );
 
             if(	(camera_position_c.z >= -2 - ESCALA_ESFERA - AJUSTE_VACA - PESCOCO_VACA  &&
-                camera_position_c.z <= -2 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA) &&
-                (posicao_esfera_x - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x &&
-                 posicao_esfera_x + ESCALA_ESFERA + LARGURA_VACA >= camera_position_c.x))
-        {
-            printf("\n\n\n\n\n colisao 1");
-            camera_position_c = colisao_esfera(camera_position_c);
+                    camera_position_c.z <= -2 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA) &&
+                    (posicao_esfera_x - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x &&
+                     posicao_esfera_x + ESCALA_ESFERA + LARGURA_VACA >= camera_position_c.x))
+            {
+                printf("\n\n\n\n\n colisao 1");
+                camera_position_c = colisao_esfera(camera_position_c);
 
-        }
+            }
 
 
 
@@ -345,103 +384,101 @@ int main(int argc, char* argv[])
             direcaoe2 = movimenta_esfera(direcaoe2,velocidadedeMovimento * 2,posicao_esfera_x2, -1,model_esfera);
 
 
-        if(	(camera_position_c.z >= -1 - ESCALA_ESFERA - AJUSTE_VACA - PESCOCO_VACA  &&
-                camera_position_c.z <= -1 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
-                (posicao_esfera_x2 - ESCALA_ESFERA<= camera_position_c.x &&
-                 posicao_esfera_x2 + ESCALA_ESFERA >= camera_position_c.x))
-        {
-            printf("\n\n\n\n\n colisao 2");
-            camera_position_c = colisao_esfera(camera_position_c);
+            if(	(camera_position_c.z >= -1 - ESCALA_ESFERA - AJUSTE_VACA - PESCOCO_VACA  &&
+                    camera_position_c.z <= -1 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
+                    (posicao_esfera_x2 - ESCALA_ESFERA<= camera_position_c.x &&
+                     posicao_esfera_x2 + ESCALA_ESFERA >= camera_position_c.x))
+            {
+                printf("\n\n\n\n\n colisao 2");
+                camera_position_c = colisao_esfera(camera_position_c);
 
-        }
-
-
-        direcaoe3 = movimenta_esfera(direcaoe3,velocidadedeMovimento/2 ,posicao_esfera_x3, 0,model_esfera);
-
-        if(	(camera_position_c.z >= 0 - ESCALA_ESFERA -AJUSTE_VACA- PESCOCO_VACA  &&
-                camera_position_c.z <= 0 + ESCALA_ESFERA +AJUSTE_VACA+ PESCOCO_VACA) &&
-                (posicao_esfera_x3 - ESCALA_ESFERA - LARGURA_VACA <= camera_position_c.x  &&
-                 posicao_esfera_x3 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
-        {
-
-            printf("\n\n\n\n\n colisao 3");
-            camera_position_c = colisao_esfera(camera_position_c);
-        }
-        direcaoe4 = movimenta_esfera(direcaoe4,velocidadedeMovimento * 3,posicao_esfera_x4, 1,model_esfera);
-
-        if(	(camera_position_c.z >= 1 - ESCALA_ESFERA - AJUSTE_VACA - PESCOCO_VACA  &&
-                camera_position_c.z <= 1 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
-                (posicao_esfera_x4 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
-                 posicao_esfera_x4 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
-        {
-            printf("\n\n\n\n\n colisao 4");
-            camera_position_c = colisao_esfera(camera_position_c);
-        }
-        direcaoe5 = movimenta_esfera(direcaoe5,velocidadedeMovimento/2,posicao_esfera_x5, 2,model_esfera);
-
-        if(	(camera_position_c.z >= 2 - ESCALA_ESFERA -AJUSTE_VACA - PESCOCO_VACA  &&
-                camera_position_c.z <= 2 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
-                (posicao_esfera_x5 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
-                 posicao_esfera_x5 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
-        {
-            printf("\n\n\n\n\n colisao 5");
-            camera_position_c = colisao_esfera(camera_position_c);
-        }
-        direcaoe6 = movimenta_esfera(direcaoe6,velocidadedeMovimento,posicao_esfera_x6, 3,model_esfera);
-
-        if(	(camera_position_c.z >= 3 - ESCALA_ESFERA -AJUSTE_VACA - PESCOCO_VACA  &&
-                camera_position_c.z <= 3 + ESCALA_ESFERA +AJUSTE_VACA+ PESCOCO_VACA ) &&
-                (posicao_esfera_x6 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
-                 posicao_esfera_x6 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
-        {
-            printf("\n\n\n\n\n colisao 6");
-            camera_position_c = colisao_esfera(camera_position_c);
-        }
-
-        /*
-
-        if(    (camera_position_c.z <= -2 - ESCALA_ESFERA  &&
-                    camera_position_c.z <= -2 + ESCALA_ESFERA ) &&
-                    (posicao_esfera_x - ESCALA_ESFERA<= camera_position_c.x  &&
-                     posicao_esfera_x + ESCALA_ESFERA >= camera_position_c.x))
-                   {
-
-                    printf("\n\n\n\n\n colisao 1");
+            }
 
 
+            direcaoe3 = movimenta_esfera(direcaoe3,velocidadedeMovimento/2,posicao_esfera_x3, 0,model_esfera);
 
-        }*/
+            if(	(camera_position_c.z >= 0 - ESCALA_ESFERA -AJUSTE_VACA- PESCOCO_VACA  &&
+                    camera_position_c.z <= 0 + ESCALA_ESFERA +AJUSTE_VACA+ PESCOCO_VACA) &&
+                    (posicao_esfera_x3 - ESCALA_ESFERA - LARGURA_VACA <= camera_position_c.x  &&
+                     posicao_esfera_x3 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
+            {
+
+                printf("\n\n\n\n\n colisao 3");
+                camera_position_c = colisao_esfera(camera_position_c);
+            }
+            direcaoe4 = movimenta_esfera(direcaoe4,velocidadedeMovimento * 3,posicao_esfera_x4, 1,model_esfera);
+
+            if(	(camera_position_c.z >= 1 - ESCALA_ESFERA - AJUSTE_VACA - PESCOCO_VACA  &&
+                    camera_position_c.z <= 1 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
+                    (posicao_esfera_x4 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
+                     posicao_esfera_x4 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
+            {
+                printf("\n\n\n\n\n colisao 4");
+                camera_position_c = colisao_esfera(camera_position_c);
+            }
+            direcaoe5 = movimenta_esfera(direcaoe5,velocidadedeMovimento/2,posicao_esfera_x5, 2,model_esfera);
+
+            if(	(camera_position_c.z >= 2 - ESCALA_ESFERA -AJUSTE_VACA - PESCOCO_VACA  &&
+                    camera_position_c.z <= 2 + ESCALA_ESFERA + AJUSTE_VACA + PESCOCO_VACA ) &&
+                    (posicao_esfera_x5 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
+                     posicao_esfera_x5 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
+            {
+                printf("\n\n\n\n\n colisao 5");
+                camera_position_c = colisao_esfera(camera_position_c);
+            }
+            direcaoe6 = movimenta_esfera(direcaoe6,velocidadedeMovimento,posicao_esfera_x6, 3,model_esfera);
+
+            if(	(camera_position_c.z >= 3 - ESCALA_ESFERA -AJUSTE_VACA - PESCOCO_VACA  &&
+                    camera_position_c.z <= 3 + ESCALA_ESFERA +AJUSTE_VACA+ PESCOCO_VACA ) &&
+                    (posicao_esfera_x6 - ESCALA_ESFERA - LARGURA_VACA<= camera_position_c.x  &&
+                     posicao_esfera_x6 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
+            {
+                printf("\n\n\n\n\n colisao 6");
+                camera_position_c = colisao_esfera(camera_position_c);
+            }
+
+            /*
+
+            if(    (camera_position_c.z <= -2 - ESCALA_ESFERA  &&
+                        camera_position_c.z <= -2 + ESCALA_ESFERA ) &&
+                        (posicao_esfera_x - ESCALA_ESFERA<= camera_position_c.x  &&
+                         posicao_esfera_x + ESCALA_ESFERA >= camera_position_c.x))
+                       {
+
+                        printf("\n\n\n\n\n colisao 1");
+
+
+
+            }*/
 //desenha_esfera(posicaoesfera, 1,model_esfera2);
 
-        direcaoCoelho1 = movimenta_coelhos(direcaoCoelho1, velocidadedeMovimento/2,posicaoYcoelho1,posicao_coelho_X,posicao_coelho_Z,model_bunny);
-        if(	(camera_position_c.z >= posicao_coelho_Z - ESCALA_COELHOS - AJUSTE_VACA - PESCOCO_VACA &&
-                camera_position_c.z <= posicao_coelho_Z + ESCALA_COELHOS + AJUSTE_VACA - PESCOCO_VACA) &&
-                (posicao_coelho_X - ESCALA_COELHOS - LARGURA_VACA<= camera_position_c.x  &&
-                 posicao_coelho_X + ESCALA_COELHOS + LARGURA_VACA >= camera_position_c.x))
-        {
+            direcaoCoelho1 = movimenta_coelhos(direcaoCoelho1, velocidadedeMovimento/2,posicaoYcoelho1,posicao_coelho_X,posicao_coelho_Z,model_bunny);
+            if(	(camera_position_c.z >= posicao_coelho_Z - ESCALA_COELHOS - AJUSTE_VACA - PESCOCO_VACA &&
+                    camera_position_c.z <= posicao_coelho_Z + ESCALA_COELHOS + AJUSTE_VACA - PESCOCO_VACA) &&
+                    (posicao_coelho_X - ESCALA_COELHOS - LARGURA_VACA<= camera_position_c.x  &&
+                     posicao_coelho_X + ESCALA_COELHOS + LARGURA_VACA >= camera_position_c.x))
+            {
 
-            //printf("\n\n\n\n\n colisao 3");
-            printf("\n\n\n\n\n colisao coelho");
-            camera_position_c = colisao_coelho(camera_position_c);
-        }
-
-
-
-        if(	(camera_position_c.z <= -LIMITEFRENTEATRAS - AJUSTE_VACA + 0.82 ||
-                camera_position_c.z >= LIMITEFRENTEATRAS + AJUSTE_VACA  - 0.3))
-                {
-                     printf("\n\n\n COLISAO COM A PAREDE");
-                     camera_position_c = colisao_parede(camera_position_c);
-                 }
-
-        if(	(camera_position_c.x <= -LIMITEHORIZONTAL + LARGURA_VACA  ||
-                camera_position_c.x >= LIMITEHORIZONTAL - LARGURA_VACA ))
-                {
-                     printf("\n\n\n COLISAO COM A PAREDE");
-                     camera_position_c = colisao_parede(camera_position_c);
-                 }
+                //printf("\n\n\n\n\n colisao 3");
+                printf("\n\n\n\n\n colisao coelho");
+                camera_position_c = colisao_coelho(camera_position_c);
+            }
 
 
+
+            if(	(camera_position_c.z <= -LIMITEFRENTEATRAS - AJUSTE_VACA + 0.82 ||
+                    camera_position_c.z >= LIMITEFRENTEATRAS + AJUSTE_VACA  - 0.3))
+            {
+                printf("\n\n\n COLISAO COM A PAREDE");
+                camera_position_c = colisao_parede(camera_position_c);
+            }
+
+            if(	(camera_position_c.x <= -LIMITEHORIZONTAL + LARGURA_VACA  ||
+                    camera_position_c.x >= LIMITEHORIZONTAL - LARGURA_VACA ))
+            {
+                printf("\n\n\n COLISAO COM A PAREDE");
+                camera_position_c = colisao_parede(camera_position_c);
+            }
 
 
 
@@ -472,106 +509,112 @@ int main(int argc, char* argv[])
 
 
 
-        model = Matrix_Translate(0.0f,-0.8f,1.0f)
-                * Matrix_Scale(8.0f,1.0f,8.0f);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, CUBE);
-        DrawVirtualObject("Cube");
+
+
+            model = Matrix_Translate(0.0f,-0.8f,1.0f)
+                    * Matrix_Scale(8.0f,1.0f,8.0f);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, CUBE);
+            DrawVirtualObject("Cube");
 
 
 
-        // VACA
+            // VACA
 
 
 
-        glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
-        model =Matrix_Translate(camera_position_c.x,-0.25,camera_position_c.z-AJUSTE_VACA);
+            glfwGetCursorPos(window, &g_LastCursorPosX, &g_LastCursorPosY);
+            model =Matrix_Translate(camera_position_c.x,-0.25,camera_position_c.z-AJUSTE_VACA);
 
-        model = model *Matrix_Scale(0.25f,0.25f,0.25f) * Matrix_Rotate_Y(M_PI/2);
+            model = model *Matrix_Scale(0.25f,0.25f,0.25f) * Matrix_Rotate_Y(M_PI/2);
 
-        //if (g_LastCursorPosX/g_LastCursorPosY > 0 && g_LastCursorPosX/g_LastCursorPosY < M_PI/2 )
-        //model = model *Matrix_Rotate_Y(-M_PI * g_LastCursorPosX*0.01);
+            //if (g_LastCursorPosX/g_LastCursorPosY > 0 && g_LastCursorPosX/g_LastCursorPosY < M_PI/2 )
+            //model = model *Matrix_Rotate_Y(-M_PI * g_LastCursorPosX*0.01);
 
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, HOMEM);
-        DrawVirtualObject("cow");
-
-
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, HOMEM);
+            DrawVirtualObject("cow");
 
 
-        //LIMITES DO MAPA
 
 
-        // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-0.5f,0.0f);
-        model = model * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, CHAO);
-        DrawVirtualObject("plane");
+            //LIMITES DO MAPA
+
+
+            // Desenhamos o plano do chão
+            model = Matrix_Translate(0.0f,-0.5f,0.0f);
+            model = model * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, CHAO);
+            DrawVirtualObject("plane");
 
 
 #define AJUSTE 2
 
-        //SKY BOX LATERAL ESQUERDA
-        model = Matrix_Translate(-LIMITEHORIZONTAL,2.5f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM -AJUSTE, SKYBOXTAM)
-                *Matrix_Rotate_Z(M_PI_2) ;
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SKY_BOX_0);
-        DrawVirtualObject("plane");
+            //SKY BOX LATERAL ESQUERDA
+            model = Matrix_Translate(-LIMITEHORIZONTAL,2.5f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM -AJUSTE, SKYBOXTAM)
+                    *Matrix_Rotate_Z(M_PI_2) ;
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SKY_BOX_0);
+            DrawVirtualObject("plane");
 
 
 
-        //SKY BOX LATERAL DIREITA
-        model = Matrix_Translate(LIMITEHORIZONTAL,2.5f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM-AJUSTE, SKYBOXTAM)
-                *Matrix_Rotate_Z(M_PI_2);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SKY_BOX_1);
-        DrawVirtualObject("plane");
+            //SKY BOX LATERAL DIREITA
+            model = Matrix_Translate(LIMITEHORIZONTAL,2.5f,0.0f) * Matrix_Scale(0.0f, SKYBOXTAM-AJUSTE, SKYBOXTAM)
+                    *Matrix_Rotate_Z(M_PI_2);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SKY_BOX_1);
+            DrawVirtualObject("plane");
 
-        //SKY BOX SUPERIOR
-        model = Matrix_Translate(0.0f,LIMITEVERTICAL,0.0f) * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, CEU);
-        DrawVirtualObject("plane");
+            //SKY BOX SUPERIOR
+            model = Matrix_Translate(0.0f,LIMITEVERTICAL,0.0f) * Matrix_Scale(SKYBOXTAM, 0.0f, SKYBOXTAM);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, CEU);
+            DrawVirtualObject("plane");
 
-        //SKY BOX FRONTAL
-        model = Matrix_Translate(0.0f,2.5f,LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM-AJUSTE,0.0f )
-                *Matrix_Rotate_X(M_PI_2);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SKY_BOX_2);
-        DrawVirtualObject("plane");
+            //SKY BOX FRONTAL
+            model = Matrix_Translate(0.0f,2.5f,LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM-AJUSTE,0.0f )
+                    *Matrix_Rotate_X(M_PI_2);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SKY_BOX_2);
+            DrawVirtualObject("plane");
 
-        //SKY BOX FRONTAL
-        model = Matrix_Translate(0.0f,2.5f,-LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM-AJUSTE,0.0f )
-                *Matrix_Rotate_X(M_PI_2);
-        glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(object_id_uniform, SKY_BOX_3);
-        DrawVirtualObject("plane");
-
-
+            //SKY BOX FRONTAL
+            model = Matrix_Translate(0.0f,2.5f,-LIMITEFRENTEATRAS) * Matrix_Scale(SKYBOXTAM, SKYBOXTAM-AJUSTE,0.0f )
+                    *Matrix_Rotate_X(M_PI_2);
+            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(object_id_uniform, SKY_BOX_3);
+            DrawVirtualObject("plane");
 
 
 
 
-        //TextRendering_ShowEulerAngles(window);
-        TextRendering_ShowProjection(window);
-        TextRendering_ShowFramesPerSecond(window);
-        TextRendering_PrintString(window,"Enconste no coelho",5,5,5);
+
+
+            //TextRendering_ShowEulerAngles(window);
+            TextRendering_ShowProjection(window);
+            TextRendering_ShowFramesPerSecond(window);
+            TextRendering_PrintString(window,"Enconste no coelho",0.0,0.0,0.0);
+            TextRendering_ShowText(window,true);
 
 
 
-        glfwSwapBuffers(window);
 
 
-        glfwPollEvents();
+
+            glfwSwapBuffers(window);
+
+
+            glfwPollEvents();
+        }
     }
-}
 // Finalizamos o uso dos recursos do sistema operacional
-glfwTerminate();
+    glfwTerminate();
 
 // Fim do programa
 
-return 0;
+    return 0;
 
 }
 
@@ -600,6 +643,9 @@ glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 cam
     int stateSPACE = glfwGetKey(window,GLFW_KEY_SPACE);
     int stateCTRL = glfwGetKey(window,GLFW_KEY_LEFT_CONTROL);
 
+     int stateX = glfwGetKey(window, GLFW_KEY_X);
+    int stateC = glfwGetKey(window, GLFW_KEY_C);
+
 
 
     //Mecanica de corrida, segurou shift anda 2 vezes mais rapido
@@ -607,9 +653,6 @@ glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 cam
     {
         speed = speed * 2;
     }
-
-
-
 
 
     if (stateW == GLFW_PRESS)
@@ -634,32 +677,118 @@ glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 cam
 
     int i = 0;
 
-//Mecanica de pulo, sobre umas posicoes em y
-//tem que arrumar pq se segura fica no ar
-    if (stateSPACE == GLFW_PRESS)
+
+
+
+
+    /*
+    if (stateX == GLFW_PRESS)
     {
+        pressX = true;
+        pressC = false;
+        if (stateSPACE == GLFW_PRESS)
+        {
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P + 0.1;
+        }
+        else if (stateCTRL == GLFW_PRESS)
+        {
 
 
-        camera_position_c.y = camera_position_c.y + 0.1;
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P -0.1;
+
+        }
 
 
+        else
+        {
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P;
+        }
 
     }
+*/
 
-//mecanica de agachamento, mesmo problema
-    else if (stateCTRL == GLFW_PRESS)
+
+    //Mecanica de pulo, sobre umas posicoes em y
+    //tem que arrumar pq se segura fica no ar
+
+if (stateX == GLFW_PRESS)
     {
-
-
-        camera_position_c.y = camera_position_c.y -0.1;
-
+        pressX = true;
+        pressC = false;
     }
+if (stateC = GLFW_PRESS)
+{
+
+        pressC = true;
+        pressX = false;
+}
+if (pressC){
+
+        //printf("\nentrou aqui");
 
 
-    else
-    {
-        camera_position_c.y = 0.5;
-    }
+        if (stateSPACE == GLFW_PRESS)
+        {
+
+
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_ISO+ 0.1;
+
+
+
+        }
+
+    //mecanica de agachamento, mesmo problema
+        else if (stateCTRL == GLFW_PRESS)
+        {
+
+
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_ISO -0.1;
+
+        }
+
+
+        else
+        {
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_ISO;
+        }
+
+}
+
+
+
+
+
+
+if (pressX){
+
+
+        if (stateSPACE == GLFW_PRESS)
+        {
+
+
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P+ 0.1;
+
+
+
+        }
+
+    //mecanica de agachamento, mesmo problema
+        else if (stateCTRL == GLFW_PRESS)
+        {
+
+
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P -0.1;
+
+        }
+
+
+        else
+        {
+            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P;
+        }
+
+}
+
 
     return camera_position_c;
 }
@@ -777,6 +906,8 @@ glm::vec4 colisao_esfera(glm::vec4 camera_position_c)
     camera_position_c  = posicao_inicial_camera; //retorna a camera pra posicao inicial
     //printf("\n\n\n\n\n VOLTANDO PARA POSICAO INICIAL\n");
 
+
+
     return camera_position_c;
 
 }
@@ -822,6 +953,74 @@ bool Colisao(float cx,  float cz, float sx, float sz)
 }
 
 
+float dificuldade(GLFWwindow* window, bool& pressRightCtrl, bool& pressRightShift, bool& pressRightAlt)
+{
+    int stateRIGHTCTRL = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
+    if (stateRIGHTCTRL == GLFW_PRESS)
+    {
+        pressRightCtrl = true;
+        pressRightShift = false;
+        pressRightAlt = false;
+
+    }
+
+    int stateRIGHTSHIFT = glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT);
+    if (stateRIGHTSHIFT == GLFW_PRESS)
+    {
+        pressRightShift = true;
+        pressRightCtrl = false;
+        pressRightAlt = false;
+
+    }
+
+    int stateRIGHTALT = glfwGetKey(window, GLFW_KEY_RIGHT_ALT);
+    if (stateRIGHTALT == GLFW_PRESS)
+    {
+        pressRightShift = false;
+        pressRightCtrl = false;
+        pressRightAlt = true;
+
+    }
+
+    if(!pressRightCtrl && !pressRightShift)
+    {
+        return VESFERASPADRAO;
+    }
+
+
+
+
+    if (pressRightShift)
+    {
+        return VESFERASHARD;
+        //printf("\nHARD");
+    }
+
+    if (pressRightCtrl)
+    {
+        return VESFERASEASY;
+        //printf("\nEASY");
+    }
+    return VESFERASPADRAO;
+}
+
+
+
+void TextRendering_ShowText(GLFWwindow* window, bool vitoria)
+{
+
+
+    if ( !g_ShowInfoText )
+        return;
+
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    if ( g_UsePerspectiveProjection )
+        TextRendering_PrintString(window, "Olaaaa", 0.4f-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
+    else
+        TextRendering_PrintString(window, "Orthographic", 0.4-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
+}
 
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
