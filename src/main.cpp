@@ -1,5 +1,11 @@
 //#include "camera_posize.cpp"
 #include "loadFunctions.cpp"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <iostream>
+#include <chrono>
+#include <thread>
 
 #define M_PI   3.14159265358979323846
 #define M_PI_2 1.57079632679489661923
@@ -37,7 +43,7 @@ bool pressRightAlt = true;
 #define PESCOCO_VACA 0.15
 
 #define ALTURA_PADRAO_CAMERA_3P 0.0
-#define ALTURA_PADRAO_CAMERA_ISO 1
+#define ALTURA_PADRAO_CAMERA_ISO 0
 #define POSICAO_INICIAL_CAMERA_Z 4
 
 //DEFINICAO DA CAMERA
@@ -91,7 +97,8 @@ int flag = 1;
 
 
 //void TextRendering_TextInfo(GLFWwindow* window, bool venceu);
-void TextRendering_ShowText(GLFWwindow* window, bool vitoria);
+void TextRendering_ShowText(GLFWwindow* window, int resultado);
+void TextRendering_ShowTime(GLFWwindow* window, int resultado);
 
 
 
@@ -108,9 +115,9 @@ float dificuldade(GLFWwindow* window,bool& pressRightCtrl, bool& pressRightShift
 
 ;
 
-glm::vec4 colisao_parede(glm::vec4 camera_position_c);
-glm::vec4 colisao_esfera(glm::vec4 camera_position_c);
-glm::vec4 colisao_coelho(glm::vec4 camera_position_c);
+glm::vec4 colisao_parede(GLFWwindow* window,glm::vec4 camera_position_c);
+glm::vec4 colisao_esfera(GLFWwindow* window,glm::vec4 camera_position_c);
+glm::vec4 colisao_coelho(GLFWwindow* window,glm::vec4 camera_position_c);
 
 
 
@@ -120,12 +127,19 @@ void randomiza_posicao_coelho(float& posicao_coelho_X )
     posicao_coelho_X = rand() % 4;
 
 }
+
+
+void randomiza_posicao_camera_x(float& posicao_camera_X)
+{
+    posicao_camera_X = rand() % 4;
+
+}
 //random_x_coelho = rand() % 4;
 float timeprev = glfwGetTime();
 bool look_camera = true;
 
 
-
+int resultado = 0;
 
 
 
@@ -182,11 +196,11 @@ int main(int argc, char* argv[])
 
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/madeira.jpg");      // TextureImage0
-    LoadTextureImage("../../data/esfera2.jpg"); // TextureImage1
-    LoadTextureImage("../../data/madeira3.jpg");   //TextureImage2
-    LoadTextureImage("../../data/parede.jpg"); //TextureImage3
-    LoadTextureImage("../../data/PELE.jpg"); //TextureImage4
+    LoadTextureImage("../../data/tetomadeira.jpg");      // TextureImage0
+    LoadTextureImage("../../data/esferamadeira.jpg"); // TextureImage1
+    LoadTextureImage("../../data/madeira.jpg");   //TextureImage2
+    LoadTextureImage("../../data/tetomadeira.jpg"); //TextureImage3
+    LoadTextureImage("../../data/coelho2.jpg"); //TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -258,10 +272,11 @@ int main(int argc, char* argv[])
 
 
 
-
-
+    randomiza_posicao_camera_x(camera_position_c.x );
+    randomiza_posicao_coelho(posicao_coelho_X);
     while (!glfwWindowShouldClose(window))
     {
+    resultado = 0;
 
 
 
@@ -311,7 +326,7 @@ int main(int argc, char* argv[])
         if (g_UsePerspectiveProjection)
         {
 
-            float field_of_view = 3.141592 / 2.2f;
+            float field_of_view = 3.141592 / 1.8f;
             projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
         }
         else
@@ -335,7 +350,7 @@ int main(int argc, char* argv[])
 
 
         {
-            int f=1;
+
 #define SPHERE 0
 #define BUNNY  1
 #define CHAO  2
@@ -357,12 +372,16 @@ int main(int argc, char* argv[])
             glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
             // Desenhamos o modelo da esfera
 
+            //Chamar a funcao de dificuldade, que aumenta a velocidade das esferas
             float velocidadedeMovimento = VESFERASPADRAO;
             velocidadedeMovimento = dificuldade(window,pressRightCtrl,pressRightShift,pressRightAlt);
 
 
-    //TextRendering_TextInfo(window, true);
-//bool Colisao(float cx,  float cz, float sx, float sz)
+
+
+
+     //================================================================================================
+            //DESENHOS E COLISÕES
             direcaoe1 = movimenta_esfera(direcaoe1,velocidadedeMovimento,posicao_esfera_x, -2,model_esfera);
 
             //printf("posicao_esfera1_X: %.2f\n posicao_camera_x: %.2f",posicao_esfera_x, camera_position_c.x );
@@ -373,7 +392,10 @@ int main(int argc, char* argv[])
                      posicao_esfera_x + ESCALA_ESFERA + LARGURA_VACA >= camera_position_c.x))
             {
                 printf("\n\n\n\n\n colisao 1");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
 
             }
 
@@ -390,7 +412,10 @@ int main(int argc, char* argv[])
                      posicao_esfera_x2 + ESCALA_ESFERA >= camera_position_c.x))
             {
                 printf("\n\n\n\n\n colisao 2");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
 
             }
 
@@ -404,7 +429,10 @@ int main(int argc, char* argv[])
             {
 
                 printf("\n\n\n\n\n colisao 3");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
             }
             direcaoe4 = movimenta_esfera(direcaoe4,velocidadedeMovimento * 3,posicao_esfera_x4, 1,model_esfera);
 
@@ -414,7 +442,10 @@ int main(int argc, char* argv[])
                      posicao_esfera_x4 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
             {
                 printf("\n\n\n\n\n colisao 4");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
             }
             direcaoe5 = movimenta_esfera(direcaoe5,velocidadedeMovimento/2,posicao_esfera_x5, 2,model_esfera);
 
@@ -424,7 +455,10 @@ int main(int argc, char* argv[])
                      posicao_esfera_x5 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
             {
                 printf("\n\n\n\n\n colisao 5");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
             }
             direcaoe6 = movimenta_esfera(direcaoe6,velocidadedeMovimento,posicao_esfera_x6, 3,model_esfera);
 
@@ -434,7 +468,10 @@ int main(int argc, char* argv[])
                      posicao_esfera_x6 + ESCALA_ESFERA + LARGURA_VACA>= camera_position_c.x))
             {
                 printf("\n\n\n\n\n colisao 6");
-                camera_position_c = colisao_esfera(camera_position_c);
+                camera_position_c = colisao_esfera(window,camera_position_c);
+                resultado = 1;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
             }
 
             /*
@@ -450,18 +487,21 @@ int main(int argc, char* argv[])
 
 
             }*/
-//desenha_esfera(posicaoesfera, 1,model_esfera2);
+
 
             direcaoCoelho1 = movimenta_coelhos(direcaoCoelho1, velocidadedeMovimento/2,posicaoYcoelho1,posicao_coelho_X,posicao_coelho_Z,model_bunny);
             if(	(camera_position_c.z >= posicao_coelho_Z - ESCALA_COELHOS - AJUSTE_VACA - PESCOCO_VACA &&
-                    camera_position_c.z <= posicao_coelho_Z + ESCALA_COELHOS + AJUSTE_VACA - PESCOCO_VACA) &&
+                    camera_position_c.z <= posicao_coelho_Z + ESCALA_COELHOS + AJUSTE_VACA + PESCOCO_VACA) &&
                     (posicao_coelho_X - ESCALA_COELHOS - LARGURA_VACA<= camera_position_c.x  &&
                      posicao_coelho_X + ESCALA_COELHOS + LARGURA_VACA >= camera_position_c.x))
             {
 
-                //printf("\n\n\n\n\n colisao 3");
-                printf("\n\n\n\n\n colisao coelho");
-                camera_position_c = colisao_coelho(camera_position_c);
+
+                //printf("\n\n\n\n\n colisao coelho");
+                camera_position_c = colisao_coelho(window,camera_position_c);
+                resultado = 2;
+                randomiza_posicao_coelho(posicao_coelho_X);
+                randomiza_posicao_camera_x(camera_position_c.x);
             }
 
 
@@ -470,16 +510,17 @@ int main(int argc, char* argv[])
                     camera_position_c.z >= LIMITEFRENTEATRAS + AJUSTE_VACA  - 0.3))
             {
                 printf("\n\n\n COLISAO COM A PAREDE");
-                camera_position_c = colisao_parede(camera_position_c);
+                camera_position_c = colisao_parede(window,camera_position_c);
             }
 
             if(	(camera_position_c.x <= -LIMITEHORIZONTAL + LARGURA_VACA  ||
                     camera_position_c.x >= LIMITEHORIZONTAL - LARGURA_VACA ))
             {
                 printf("\n\n\n COLISAO COM A PAREDE");
-                camera_position_c = colisao_parede(camera_position_c);
+                camera_position_c = colisao_parede(window,camera_position_c);
             }
 
+//================================================================================================
 
 
 
@@ -499,27 +540,7 @@ int main(int argc, char* argv[])
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-            model = Matrix_Translate(0.0f,-0.8f,1.0f)
-                    * Matrix_Scale(8.0f,1.0f,8.0f);
-            glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(object_id_uniform, CUBE);
-            DrawVirtualObject("Cube");
-
-
-
-            // VACA
+        // VACA (o player, acompanha a camera)
 
 
 
@@ -528,8 +549,9 @@ int main(int argc, char* argv[])
 
             model = model *Matrix_Scale(0.25f,0.25f,0.25f) * Matrix_Rotate_Y(M_PI/2);
 
-            //if (g_LastCursorPosX/g_LastCursorPosY > 0 && g_LastCursorPosX/g_LastCursorPosY < M_PI/2 )
-            //model = model *Matrix_Rotate_Y(-M_PI * g_LastCursorPosX*0.01);
+            /*if (g_LastCursorPosX/g_LastCursorPosY > 0 && g_LastCursorPosX/g_LastCursorPosY < M_PI/2 )
+            model = model *Matrix_Rotate_Y(g_LastCursorPosX*-0.01);
+            */
 
             glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(object_id_uniform, HOMEM);
@@ -595,8 +617,9 @@ int main(int argc, char* argv[])
             //TextRendering_ShowEulerAngles(window);
             TextRendering_ShowProjection(window);
             TextRendering_ShowFramesPerSecond(window);
-            TextRendering_PrintString(window,"Enconste no coelho",0.0,0.0,0.0);
-            TextRendering_ShowText(window,true);
+
+            TextRendering_ShowText(window,resultado);
+            TextRendering_ShowTime(window,resultado);
 
 
 
@@ -621,7 +644,7 @@ int main(int argc, char* argv[])
 
 
 
-int y = posicao_inicial_camera.y;
+
 
 
 glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 camera_view_vector,glm::vec4 camera_up_vector)
@@ -678,34 +701,6 @@ glm::vec4 fpsCamera(GLFWwindow* window,glm::vec4 camera_position_c,glm::vec4 cam
     int i = 0;
 
 
-
-
-
-    /*
-    if (stateX == GLFW_PRESS)
-    {
-        pressX = true;
-        pressC = false;
-        if (stateSPACE == GLFW_PRESS)
-        {
-            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P + 0.1;
-        }
-        else if (stateCTRL == GLFW_PRESS)
-        {
-
-
-            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P -0.1;
-
-        }
-
-
-        else
-        {
-            camera_position_c.y = ALTURA_PADRAO_CAMERA_3P;
-        }
-
-    }
-*/
 
 
     //Mecanica de pulo, sobre umas posicoes em y
@@ -798,7 +793,7 @@ if (pressX){
 
 
 
-
+//Funcao pra fazer as esferas e movimentar elas em direção as paredes
 int movimenta_esfera(int direc,float vel,float& posicaoXesfera,float posicao_esfera_Z,glm::mat4 modelesf)
 {
 
@@ -851,7 +846,7 @@ int movimenta_esfera(int direc,float vel,float& posicaoXesfera,float posicao_esf
 
 }
 
-
+//Funcao pra criar o coelho
 int movimenta_coelhos(int direc,float vel,float& posicaoYcoelho,float posicao_coelho_X,float posicao_coelho_Z,glm::mat4 modelbunny)
 {
 
@@ -893,18 +888,18 @@ int movimenta_coelhos(int direc,float vel,float& posicaoYcoelho,float posicao_co
 
     modelbunny = Matrix_Translate(posicao_coelho_X,0.0 - ESCALA_COELHOS,posicao_coelho_Z)
                  * Matrix_Scale(ESCALA_COELHOS, ESCALA_COELHOS, ESCALA_COELHOS)
-                 * Matrix_Rotate_Y((float)glfwGetTime() * 0.1f) ;
+                 * Matrix_Rotate_Y((float)glfwGetTime() * 0.5f) ;
     glUniformMatrix4fv(model_uniform, 1, GL_FALSE, glm::value_ptr(modelbunny));
     glUniform1i(object_id_uniform, BUNNY);
     DrawVirtualObject("bunny");
 }
 
 
-glm::vec4 colisao_esfera(glm::vec4 camera_position_c)
+glm::vec4 colisao_esfera(GLFWwindow* window,glm::vec4 camera_position_c)
 {
-    //printf("MENSAGEM DE COLIDIU E PERDEU AQUI");
+
     camera_position_c  = posicao_inicial_camera; //retorna a camera pra posicao inicial
-    //printf("\n\n\n\n\n VOLTANDO PARA POSICAO INICIAL\n");
+
 
 
 
@@ -912,13 +907,14 @@ glm::vec4 colisao_esfera(glm::vec4 camera_position_c)
 
 }
 
-glm::vec4 colisao_coelho(glm::vec4 camera_position_c)
+glm::vec4 colisao_coelho(GLFWwindow* window,glm::vec4 camera_position_c)
 {
 
 
     printf("MENSAGEM DE COLIDIU COM O COELHO E GANHOU AQUI");
+
     camera_position_c  = posicao_inicial_camera; //retorna a camera pra posicao inicial
-    //randomiza_posicao_coelho(posicao_coelho_X)
+
 
     return camera_position_c;
 
@@ -926,13 +922,13 @@ glm::vec4 colisao_coelho(glm::vec4 camera_position_c)
 
 
 
-glm::vec4 colisao_parede(glm::vec4 camera_position_c)
+glm::vec4 colisao_parede(GLFWwindow* window,glm::vec4 camera_position_c)
 {
 
 
-    printf("MENSAGEM DE COLIDIU COM A PAREDE E PERDEU AQUI");
+
     camera_position_c  = posicao_inicial_camera; //retorna a camera pra posicao inicial
-    //randomiza_posicao_coelho(posicao_coelho_X)
+
 
     return camera_position_c;
 
@@ -940,19 +936,7 @@ glm::vec4 colisao_parede(glm::vec4 camera_position_c)
 
 
 
-
-bool Colisao(float cx,  float cz, float sx, float sz)
-{
-    if ((cx >= sx - ESCALA_ESFERA &&
-            cx <= sx + ESCALA_ESFERA ) &&
-            (cz >= sz - ESCALA_ESFERA &&
-             cz <= sz + ESCALA_ESFERA ))
-        return true;
-    else
-        false;
-}
-
-
+//FUNCAO DA DIFICULDADE DO JOGO
 float dificuldade(GLFWwindow* window, bool& pressRightCtrl, bool& pressRightShift, bool& pressRightAlt)
 {
     int stateRIGHTCTRL = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL);
@@ -1005,22 +989,93 @@ float dificuldade(GLFWwindow* window, bool& pressRightCtrl, bool& pressRightShif
 }
 
 
+//FUNCAO PRA MOSTRAR QUANDO GANHA OU PERDE
+void TextRendering_ShowText(GLFWwindow* window, int resultado)
+{
 
-void TextRendering_ShowText(GLFWwindow* window, bool vitoria)
+    static float old_seconds = (float)glfwGetTime();
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+    float seconds = (float)glfwGetTime();
+
+    float ellapsed_seconds = seconds - old_seconds;
+
+
+    if (resultado == 2){
+        if( ellapsed_seconds > 1.0f && ellapsed_seconds < 5.0f)
+        {
+            TextRendering_PrintString(window, "Voce Venceu!", 0.2f-13*charwidth, -0.0f+2*lineheight/10, 2.0f);
+            printf("\n\nEntra aqui MENSAGEM DE VITÓRIA");
+        }
+        else if (ellapsed_seconds > 5.0f){
+            ellapsed_seconds = 0;
+        }
+        resultado = 0;
+        return;
+    }
+    else if (resultado == 1){
+        if( ellapsed_seconds > 1.0f && ellapsed_seconds < 5.0f)
+        {
+            TextRendering_PrintString(window, "Voce Perdeu!", 0.2f-13*charwidth, -0.0f+2*lineheight/10, 2.0f);
+            printf("\n\nEntra aqui MENSAGEM DE VITÓRIA");
+        }
+        else if (ellapsed_seconds > 5.0f){
+            ellapsed_seconds = 0;
+        }
+        resultado = 0;
+        return;
+    }
+    else
+        return;
+    }
+
+    void TextRendering_ShowTime(GLFWwindow* window, int resultado)
 {
 
 
-    if ( !g_ShowInfoText )
-        return;
 
-    float lineheight = TextRendering_LineHeight(window);
+    static float old_seconds = (float)glfwGetTime();
+    static int   ellapsed_frames = 0;
+    static char  buffer[20] = "?? seg";
+    static int   numchars = 13;
+    int i;
+
+     float lineheight = TextRendering_LineHeight(window);
     float charwidth = TextRendering_CharWidth(window);
 
-    if ( g_UsePerspectiveProjection )
-        TextRendering_PrintString(window, "Olaaaa", 0.4f-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
+    ellapsed_frames += 1;
+
+    // Recuperamos o número de segundos que passou desde a execução do programa
+    float seconds = (float)glfwGetTime();
+
+    // Número de segundos desde o último cálculo do fps
+    float ellapsed_seconds = seconds - old_seconds;
+    if (resultado == 2)
+    {
+       for(i=0;i<2000;i++)
+       numchars = snprintf(buffer, 20, "Ganhou! %.2f seg ",ellapsed_seconds);
+
+    }
+    if (resultado == 1)
+    {
+        for(i=0;i<2000;i++)
+        numchars = snprintf(buffer, 20, "Perdeu! %.2f seg ",ellapsed_seconds);
+    }
     else
-        TextRendering_PrintString(window, "Orthographic", 0.4-13*charwidth, -1.0f+2*lineheight/10, 1.0f);
+        numchars = snprintf(buffer, 20, "%.2f seg ",ellapsed_seconds);
+
+
+
+    if (resultado == 1 || resultado == 2){
+
+
+            old_seconds = seconds;
+    }
+
+    else
+        TextRendering_PrintString(window, buffer, 0.5f-(numchars + 1)*charwidth, 0.5f-lineheight, 3.0f);
 }
+
 
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null

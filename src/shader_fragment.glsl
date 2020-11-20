@@ -128,9 +128,9 @@ void main()
     }
     else if ( object_id == BUNNY )
     {
-        Kd = vec3(0.08,0.4,0.8);
-        Ks = vec3(0.8,0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
+        Kd = vec3(1,1,1);
+        Ks = vec3(1,1,1);
+        Ka = vec3(1,1,1);
         q = 32.0;
 
         /*
@@ -147,6 +147,8 @@ void main()
         V = (position_model.y - miny)/(maxy-miny);
         */
     }
+
+
 
 
 
@@ -171,6 +173,31 @@ void main()
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
        U = texcoords.x;
         V = texcoords.y;
+    }
+
+
+    else if( object_id == HOMEM)
+    {
+
+
+        Kd = vec3(0.7,0.2,0.7);
+        Ks = vec3(0.5,0.5,0.5);
+        Ka = vec3(0.5,0.5,0.5);
+        q = 32.0;
+
+        /*
+        float minx = bbox_min.x;
+        float maxx = bbox_max.x;
+
+        float miny = bbox_min.y;
+        float maxy = bbox_max.y;
+
+        float minz = bbox_min.z;
+        float maxz = bbox_max.z;
+
+       U = (position_model.x - minx)/(maxx-minx);
+        V = (position_model.y - miny)/(maxy-miny);
+        */
     }
 
 
@@ -227,7 +254,7 @@ void main()
 
     vec3 texturaParede = texture(TextureImage3, vec2(U,V)).rgb; // textura da parede
 
-    vec3 Kd4 = texture(TextureImage4, vec2(U,V)).rgb;
+    vec3 texturaCoelho = texture(TextureImage4, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
@@ -264,11 +291,13 @@ void main()
     else if (object_id ==  CEU)
     color = texturaTeto * (lambert + 1);
 
+    else if (object_id == BUNNY)
+    color = (lambert_diffuse_term + ambient_term + phong_specular_term);
 
 
 
     else
-    color = lambert_diffuse_term + ambient_term + phong_specular_term;
+    color = (lambert_diffuse_term + ambient_term + phong_specular_term);
 
 
     // Cor final com correção gamma, considerando monitor sRGB.
