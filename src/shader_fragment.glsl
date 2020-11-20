@@ -23,9 +23,14 @@ uniform mat4 projection;
 #define BUNNY  1
 #define CHAO  2
 #define HOMEM  3
-#define SPHERE2 0
+#define SPHERE2 4
 #define SKY_BOX 5
 #define CEU 6
+#define CUBE 7
+#define SKY_BOX_0 8
+#define SKY_BOX_1 9
+#define SKY_BOX_2 10
+#define SKY_BOX_3 11
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -36,6 +41,8 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
+uniform sampler2D TextureImage3;
+uniform sampler2D TextureImage4;
 
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -141,14 +148,25 @@ void main()
         */
     }
 
-    else if ( object_id == CHAO )
+
+
+    else if(object_id == CHAO || object_id == CEU || object_id == SKY_BOX_0 || object_id == SKY_BOX_1 || object_id == SKY_BOX_2 || object_id == SKY_BOX_3 )
+    {
+
+        // Coordenadas de textura do plano, obtidas do arquivo OBJ.
+       U = texcoords.x;
+        V = texcoords.y;
+
+
+    }
+    /*else if ( object_id == CEU )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
        U = texcoords.x;
         V = texcoords.y;
     }
-
-    else if ( object_id == CEU )
+*/
+    else if ( object_id == CUBE )
     {
         // Coordenadas de textura do plano, obtidas do arquivo OBJ.
        U = texcoords.x;
@@ -199,11 +217,17 @@ void main()
 
 
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    vec3 Kd0 = texture(TextureImage0, vec2(U,V)).rgb; // textura do chão
+    vec3 texturaChao = texture(TextureImage0, vec2(U,V)).rgb; // textura do chão
 
-    vec3 Kd1 = texture(TextureImage1, vec2(U,V)).rgb; // noite
+    vec3 texturaEsfera = texture(TextureImage1, vec2(U,V)).rgb; // bola
 
-    vec3 nightskytexture = texture(TextureImage2,vec2(U,V)).rgb; //textura pro céu
+
+
+    vec3 texturaTeto = texture(TextureImage2,vec2(U,V)).rgb; //textura pro céu
+
+    vec3 texturaParede = texture(TextureImage3, vec2(U,V)).rgb; // textura da parede
+
+    vec3 Kd4 = texture(TextureImage4, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
@@ -230,13 +254,19 @@ void main()
 
 
 
+   if (object_id ==  CHAO || object_id == SKY_BOX)
+    color = texturaChao * (lambert + 1);
+   else if (object_id ==  SPHERE)
+    color = texturaEsfera * (lambert + 1);
 
-    if (object_id ==  SPHERE)
-    color = Kd1 * (lambert + 1);
-    else if (object_id ==  CHAO)
-    color = Kd0 * (lambert + 1);
+    else if(object_id == SKY_BOX_0 || object_id == SKY_BOX_1 || object_id == SKY_BOX_2 || object_id == SKY_BOX_3 )
+    color = texturaParede * (lambert + 1);
     else if (object_id ==  CEU)
-    color = nightskytexture * (lambert + 1);
+    color = texturaTeto * (lambert + 1);
+
+
+
+
     else
     color = lambert_diffuse_term + ambient_term + phong_specular_term;
 
